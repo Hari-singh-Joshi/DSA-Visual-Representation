@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Linked List Visualizer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .linkedlist-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: 20px;
+      background-color: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      height: 150px;
+    }
+
+    .node {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .node-box {
+      width: 80px;
+      height: 60px;
+      background-color: #4e73df;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      border-radius: 10px;
+      position: relative;
+      transition: transform 0.3s ease;
+    }
+
+    .arrow {
+      font-size: 24px;
+      margin: 0 10px;
+      color: #6c757d;
+    }
+
+    .node.updated {
+      background-color: #f6c23e !important;
+      animation: pulse 1.5s infinite;
+    }
+
+    .node.deleted .node-box {
+      background-color: #e74a3b !important;
+      animation: fadeOut 0.5s forwards;
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .status-message {
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="container-fluid">
+  <h1 class="text-center my-4">Linked List Visualizer</h1>
+  <div class="row">
+    <!-- Controls -->
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Controls</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Operation</label>
+            <select id="operation" class="form-select">
+              <option value="insertHead">Insert at Head</option>
+              <option value="insertTail">Insert at Tail</option>
+              <option value="insertAt">Insert at Index</option>
+              <option value="deleteHead">Delete Head</option>
+              <option value="deleteTail">Delete Tail</option>
+              <option value="deleteAt">Delete at Index</option>
+            </select>
+          </div>
+          <div class="mb-3" id="indexInputGroup">
+            <label class="form-label">Index</label>
+            <input type="number" id="indexInput" class="form-control" placeholder="Index (0-based)" />
+          </div>
+          <div class="mb-3" id="valueInputGroup">
+            <label class="form-label">Value</label>
+            <input type="text" id="valueInput" class="form-control" placeholder="Enter value" />
+          </div>
+          <button id="executeBtn" class="btn btn-primary w-100 mb-3">
+            <i class="fas fa-play me-2"></i>Execute
+          </button>
+          <button id="clearBtn" class="btn btn-outline-danger w-100">
+            <i class="fas fa-trash-alt me-2"></i>Clear List
+          </button>
+          <div class="mt-4">
+            <h6>List Info</h6>
+            <div class="alert alert-info">
+              <p class="mb-1">Length: <span id="listLength">0</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visualization -->
+    <div class="col-md-8">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-success text-white d-flex justify-content-between">
+          <h5 class="mb-0">Visualization</h5>
+          <div>
+            <span class="badge bg-light text-dark me-2">
+              Speed: <span id="speedLabel">Normal</span>
+            </span>
+            <input type="range" id="speedControl" min="50" max="2000" value="500" class="form-range" />
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="linkedlist-container" id="linkedListContainer"></div>
+          <div class="status-message text-muted" id="statusMessage"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const container = document.getElementById("linkedListContainer");
+  const operation = document.getElementById("operation");
+  const indexInput = document.getElementById("indexInput");
+  const valueInput = document.getElementById("valueInput");
+  const executeBtn = document.getElementById("executeBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const speedControl = document.getElementById("speedControl");
+  const speedLabel = document.getElementById("speedLabel");
+  const statusMessage = document.getElementById("statusMessage");
+  const listLengthEl = document.getElementById("listLength");
+
+  let linkedList = [];
+  let speed = 500;
+
+  speedControl.addEventListener("input", () => {
+    speed = 2050 - speedControl.value;
+    speedLabel.textContent = speedControl.value < 500 ? "Fast" : speedControl.value < 1500 ? "Normal" : "Slow";
+  });
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function renderList() {
+    container.innerHTML = "";
+    linkedList.forEach((node, i) => {
+      const nodeDiv = document.createElement("div");
+      nodeDiv.className = "node";
+      if (node.deleted) nodeDiv.classList.add("deleted");
+      const box = document.createElement("div");
+      box.className = "node-box";
+      box.textContent = node.value;
+      nodeDiv.appendChild(box);
+      if (i < linkedList.length - 1) {
+        const arrow = document.createElement("div");
+        arrow.className = "arrow";
+        arrow.innerHTML = "&rarr;";
+        nodeDiv.appendChild(arrow);
+      }
+      container.appendChild(nodeDiv);
+    });
+  }
+
+  function showStatus(msg) {
+    statusMessage.textContent = msg;
+  }
+
+  function updateLength() {
+    listLengthEl.textContent = linkedList.length;
+  }
+
+  async function executeOperation() {
+    const op = operation.value;
+    const index = parseInt(indexInput.value);
+    const value = valueInput.value;
+
+    if (["insertAt", "deleteAt"].includes(op) && (isNaN(index) || index < 0 || index > linkedList.length)) {
+      return showStatus("Invalid index.");
+    }
+
+    if (op.startsWith("insert") && value === "") {
+      return showStatus("Please enter a value.");
+    }
+
+    if (op === "insertHead") {
+      linkedList.unshift({ value });
+      showStatus(`Inserted '${value}' at head`);
+    } else if (op === "insertTail") {
+      linkedList.push({ value });
+      showStatus(`Inserted '${value}' at tail`);
+    } else if (op === "insertAt") {
+      linkedList.splice(index, 0, { value });
+      showStatus(`Inserted '${value}' at index ${index}`);
+    } else if (op === "deleteHead") {
+      if (linkedList.length) {
+        linkedList[0].deleted = true;
+        renderList();
+        await sleep(speed);
+        linkedList.shift();
+        showStatus("Deleted head node");
+      }
+    } else if (op === "deleteTail") {
+      if (linkedList.length) {
+        linkedList[linkedList.length - 1].deleted = true;
+        renderList();
+        await sleep(speed);
+        linkedList.pop();
+        showStatus("Deleted tail node");
+      }
+    } else if (op === "deleteAt") {
+      linkedList[index].deleted = true;
+      renderList();
+      await sleep(speed);
+      linkedList.splice(index, 1);
+      showStatus(`Deleted node at index ${index}`);
+    }
+
+    renderList();
+    updateLength();
+  }
+
+  executeBtn.addEventListener("click", executeOperation);
+
+  clearBtn.addEventListener("click", () => {
+    linkedList = [];
+    renderList();
+    updateLength();
+    showStatus("List cleared");
+  });
+
+  // Hide index input for head/tail operations
+  operation.addEventListener("change", () => {
+    const showIndex = ["insertAt", "deleteAt"].includes(operation.value);
+    indexInput.parentElement.style.display = showIndex ? "block" : "none";
+    valueInput.parentElement.style.display = operation.value.startsWith("delete") ? "none" : "block";
+  });
+
+  renderList();
+</script>
+</body>
+</html>

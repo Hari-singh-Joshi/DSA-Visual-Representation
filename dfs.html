@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Graph Visualizer with DFS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body { background-color: #f8f9fa; }
+    .graph-container {
+      width: 100%; height: 600px;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      background-color: #fff;
+    }
+    .highlighted {
+      background-color: #f39c12 !important;
+      line-color: #e74c3c !important;
+      target-arrow-color: #e74c3c !important;
+    }
+  </style>
+</head>
+<body>
+<div class="container-fluid">
+  <h1 class="text-center my-4">Graph Visualizer (DFS)</h1>
+  <div class="row">
+    <!-- Controls -->
+    <div class="col-md-4">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Graph Controls</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Operation</label>
+            <select id="operation" class="form-select">
+              <option value="addNode">Add Node</option>
+              <option value="addEdge">Add Edge</option>
+              <option value="deleteNode">Delete Node</option>
+              <option value="deleteEdge">Delete Edge</option>
+            </select>
+          </div>
+          <div class="mb-3" id="nodeLabelGroup">
+            <label class="form-label">Node Label</label>
+            <input type="text" id="nodeLabel" class="form-control" />
+          </div>
+          <div class="mb-3" id="edgeNodesGroup" style="display:none;">
+            <label class="form-label">From</label>
+            <input type="text" id="fromNode" class="form-control mb-2" />
+            <label class="form-label">To</label>
+            <input type="text" id="toNode" class="form-control" />
+          </div>
+          <button id="executeBtn" class="btn btn-primary w-100 mb-2">Execute</button>
+          <button id="clearBtn" class="btn btn-outline-danger w-100 mb-4">Clear Graph</button>
+
+          <h6>DFS Traversal</h6>
+          <input type="text" id="startNode" class="form-control mb-2" placeholder="Start Node Label" />
+          <button id="dfsBtn" class="btn btn-secondary w-100 mb-2">Run DFS</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graph View -->
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">Graph Visualization</h5>
+        </div>
+        <div class="card-body">
+          <div class="graph-container" id="graphContainer"></div>
+          <p id="statusMessage" class="text-muted mt-2"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/cytoscape@3.19.1/dist/cytoscape.min.js"></script>
+<script>
+  const cy = cytoscape({
+    container: document.getElementById('graphContainer'),
+    elements: [],
+    style: [
+      {
+        selector: 'node',
+        style: {
+          'background-color': '#4e73df',
+          'label': 'data(label)',
+          'color': '#fff',
+          'text-valign': 'center',
+          'text-halign': 'center'
+        }
+      },
+      {
+        selector: 'edge',
+        style: {
+          'width': 2,
+          'line-color': '#6c757d',
+          'target-arrow-color': '#6c757d',
+          'target-arrow-shape': 'triangle',
+          'curve-style': 'bezier'
+        }
+      },
+      {
+        selector: '.highlighted',
+        style: {
+          'background-color': '#f39c12',
+          'line-color': '#e74c3c',
+          'target-arrow-color': '#e74c3c'
+        }
+      }
+    ],
+    layout: { name: 'grid' }
+  });
+
+  const operation = document.getElementById("operation");
+  const nodeLabel = document.getElementById("nodeLabel");
+  const fromNode = document.getElementById("fromNode");
+  const toNode = document.getElementById("toNode");
+  const executeBtn = document.getElementById("executeBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const dfsBtn = document.getElementById("dfsBtn");
+  const startNode = document.getElementById("startNode");
+  const statusMessage = document.getElementById("statusMessage");
+
+  function showStatus(msg) {
+    statusMessage.textContent = msg;
+  }
+
+  function clearHighlights() {
+    cy.elements().removeClass("highlighted");
+  }
+
+  operation.addEventListener("change", () => {
+    const op = operation.value;
+    document.getElementById("nodeLabelGroup").style.display = ["addNode", "deleteNode"].includes(op) ? "block" : "none";
+    document.getElementById("edgeNodesGroup").style.display = ["addEdge", "deleteEdge"].includes(op) ? "block" : "none";
+  });
+
+  executeBtn.addEventListener("click", () => {
+    const op = operation.value;
+    const label = nodeLabel.value.trim();
+    const from = fromNode.value.trim();
+    const to = toNode.value.trim();
+
+    if (op === "addNode") {
+      if (!label) return showStatus("Enter node label.");
+      if (cy.getElementById(label).length) return showStatus("Node exists.");
+      cy.add({ group: 'nodes', data: { id: label, label } });
+      showStatus(`Node '${label}' added.`);
+    } else if (op === "addEdge") {
+      if (!from || !to) return showStatus("Enter both node labels.");
+      if (!cy.getElementById(from).length || !cy.getElementById(to).length) return showStatus("Node(s) not found.");
+      const edgeId = `${from}-${to}`;
+      if (cy.getElementById(edgeId).length) return showStatus("Edge exists.");
+      cy.add({ group: 'edges', data: { id: edgeId, source: from, target: to } });
+      showStatus(`Edge '${edgeId}' added.`);
+    } else if (op === "deleteNode") {
+      const node = cy.getElementById(label);
+      if (!node.length) return showStatus("Node not found.");
+      cy.remove(node);
+      showStatus(`Node '${label}' deleted.`);
+    } else if (op === "deleteEdge") {
+      const edgeId = `${from}-${to}`;
+      const edge = cy.getElementById(edgeId);
+      if (!edge.length) return showStatus("Edge not found.");
+      cy.remove(edge);
+      showStatus(`Edge '${edgeId}' deleted.`);
+    }
+
+    cy.layout({ name: 'cose' }).run();
+  });
+
+  clearBtn.addEventListener("click", () => {
+    cy.elements().remove();
+    showStatus("Graph cleared.");
+  });
+
+  dfsBtn.addEventListener("click", async () => {
+    const start = startNode.value.trim();
+    if (!cy.getElementById(start).length) {
+      return showStatus("Start node not found.");
+    }
+    clearHighlights();
+    showStatus("Running DFS...");
+
+    const visited = new Set();
+    async function dfs(nodeId) {
+      if (visited.has(nodeId)) return;
+      visited.add(nodeId);
+      const node = cy.getElementById(nodeId);
+      node.addClass("highlighted");
+      await new Promise(r => setTimeout(r, 500));
+      const neighbors = node.outgoers("node");
+      for (let neighbor of neighbors) {
+        const edge = node.edgesTo(neighbor);
+        edge.addClass("highlighted");
+        await new Promise(r => setTimeout(r, 300));
+        await dfs(neighbor.id());
+      }
+    }
+
+    await dfs(start);
+    showStatus("DFS traversal complete.");
+  });
+</script>
+</body>
+</html>

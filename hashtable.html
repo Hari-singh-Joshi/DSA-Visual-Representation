@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hash Table Visualizer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .hash-table-container {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
+    .hash-table-slot {
+      width: 100px;
+      height: 100px;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 5px;
+      background-color: #fff;
+    }
+    .highlighted {
+      background-color: #f39c12 !important;
+      border: 2px solid #e74c3c;
+    }
+  </style>
+</head>
+<body>
+<div class="container-fluid">
+  <h1 class="text-center my-4">Hash Table Visualizer</h1>
+  <div class="row">
+    <!-- Controls -->
+    <div class="col-md-4">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Hash Table Controls</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Operation</label>
+            <select id="operation" class="form-select">
+              <option value="insert">Insert</option>
+              <option value="delete">Delete</option>
+              <option value="search">Search</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Key</label>
+            <input type="text" id="key" class="form-control" placeholder="Enter key (integer)" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Value</label>
+            <input type="text" id="value" class="form-control" placeholder="Enter value" />
+          </div>
+          <button id="executeBtn" class="btn btn-primary w-100 mb-2">Execute</button>
+          <button id="clearBtn" class="btn btn-outline-danger w-100">Clear Table</button>
+          <p id="statusMessage" class="text-muted mt-2"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hash Table Visualization -->
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">Hash Table Visualization</h5>
+        </div>
+        <div class="card-body">
+          <div class="hash-table-container" id="hashTableContainer">
+            <!-- Hash table slots will be rendered here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Hash Table setup
+  const tableSize = 10;
+  const table = new Array(tableSize).fill(null);
+  
+  const operation = document.getElementById("operation");
+  const keyInput = document.getElementById("key");
+  const valueInput = document.getElementById("value");
+  const executeBtn = document.getElementById("executeBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const statusMessage = document.getElementById("statusMessage");
+  const hashTableContainer = document.getElementById("hashTableContainer");
+
+  // Simple hash function
+  function hash(key) {
+    return key % tableSize;
+  }
+
+  // Function to render the hash table
+  function renderTable() {
+    hashTableContainer.innerHTML = "";
+    table.forEach((slot, index) => {
+      const slotElement = document.createElement("div");
+      slotElement.classList.add("hash-table-slot");
+      if (slot !== null) {
+        slotElement.innerHTML = `<strong>${index}</strong><br>${slot.key} : ${slot.value}`;
+      } else {
+        slotElement.innerHTML = `<strong>${index}</strong><br>Empty`;
+      }
+      hashTableContainer.appendChild(slotElement);
+    });
+  }
+
+  // Function to insert a key-value pair into the hash table
+  function insert(key, value) {
+    const index = hash(key);
+    if (table[index] !== null) {
+      return showStatus(`Slot ${index} already filled. Collision detected.`);
+    }
+    table[index] = { key, value };
+    renderTable();
+    showStatus(`Inserted ${key} : ${value} at index ${index}`);
+  }
+
+  // Function to delete a key-value pair from the hash table
+  function deleteKey(key) {
+    const index = hash(key);
+    if (table[index] === null) {
+      return showStatus(`Key ${key} not found at index ${index}`);
+    }
+    table[index] = null;
+    renderTable();
+    showStatus(`Deleted key ${key} from index ${index}`);
+  }
+
+  // Function to search for a key in the hash table
+  function search(key) {
+    const index = hash(key);
+    if (table[index] !== null && table[index].key === key) {
+      return showStatus(`Found key ${key} with value ${table[index].value} at index ${index}`);
+    } else {
+      return showStatus(`Key ${key} not found.`);
+    }
+  }
+
+  // Function to display status messages
+  function showStatus(msg) {
+    statusMessage.textContent = msg;
+  }
+
+  // Handle the execute button click
+  executeBtn.addEventListener("click", () => {
+    const key = parseInt(keyInput.value.trim());
+    const value = valueInput.value.trim();
+
+    if (isNaN(key)) {
+      return showStatus("Please enter a valid key (integer).");
+    }
+
+    const op = operation.value;
+    if (op === "insert") {
+      if (!value) return showStatus("Please enter a value.");
+      insert(key, value);
+    } else if (op === "delete") {
+      deleteKey(key);
+    } else if (op === "search") {
+      search(key);
+    }
+  });
+
+  // Handle the clear button click
+  clearBtn.addEventListener("click", () => {
+    for (let i = 0; i < tableSize; i++) {
+      table[i] = null;
+    }
+    renderTable();
+    showStatus("Hash table cleared.");
+  });
+
+  // Initial render
+  renderTable();
+</script>
+</body>
+</html>

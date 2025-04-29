@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree Data Structure Visualizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .tree-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            overflow: hidden;
+            background-color: #f8f9fa;
+        }
+        
+        .arrow-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .tree-area {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+        
+        .node {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #4e73df;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .node:hover {
+            transform: scale(1.1);
+            background-color: #2e59d9;
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .node.highlight {
+            background-color: #f6c23e;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .node.found {
+            background-color: #1cc88a;
+            animation: bounce 0.5s;
+        }
+        
+        .node.traversed {
+            background-color: #36b9cc;
+        }
+        
+        .node.deleted {
+            background-color: #e74a3b;
+            animation: fadeOut 0.5s forwards;
+        }
+        
+        .node-info {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        
+        .node:hover .node-info {
+            opacity: 1;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes fadeOut {
+            to { opacity: 0; transform: scale(0.5); }
+        }
+        
+        .path-arrow {
+            stroke: #858796;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+        
+        #arrowhead {
+            fill: #858796;
+        }
+        
+        .status-message {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .status-message.show {
+            opacity: 1;
+        }
+        
+        .form-range::-webkit-slider-thumb {
+            background: #4e73df;
+        }
+        
+        .form-range::-moz-range-thumb {
+            background: #4e73df;
+        }
+        
+        .form-range::-ms-thumb {
+            background: #4e73df;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="text-center my-4">Tree Data Structure Visualizer</h1>
+        
+        <div class="row">
+            <!-- Control Panel -->
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Tree Controls</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Operation</label>
+                            <select id="operation" class="form-select">
+                                <option value="insert">Insert Node</option>
+                                <option value="delete">Delete Node</option>
+                                <option value="search">Search Node</option>
+                                <option value="traversal">Traversal</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="nodeValue" class="form-label">Node Value</label>
+                            <input type="number" id="nodeValue" class="form-control" placeholder="Enter value">
+                        </div>
+                        
+                        <div class="mb-3" id="traversalOptions" style="display: none;">
+                            <label class="form-label">Traversal Type</label>
+                            <select id="traversalType" class="form-select">
+                                <option value="inorder">In-order</option>
+                                <option value="preorder">Pre-order</option>
+                                <option value="postorder">Post-order</option>
+                                <option value="levelorder">Level-order</option>
+                            </select>
+                        </div>
+                        
+                        <button id="executeBtn" class="btn btn-primary w-100 mb-3">
+                            <i class="fas fa-play me-2"></i>Execute
+                        </button>
+                        
+                        <button id="clearBtn" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-trash-alt me-2"></i>Clear Tree
+                        </button>
+                        
+                        <div class="mt-4">
+                            <h6>Tree Information</h6>
+                            <div id="treeInfo" class="alert alert-info">
+                                <p class="mb-1">Nodes: <span id="nodeCount">0</span></p>
+                                <p class="mb-1">Height: <span id="treeHeight">0</span></p>
+                                <p class="mb-1">Type: <span id="treeType">Binary Search Tree</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Instructions</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">1. Enter a value and click Insert</li>
+                            <li class="list-group-item">2. Select operation type from dropdown</li>
+                            <li class="list-group-item">3. Animation speed adjusts automatically</li>
+                            <li class="list-group-item">4. Hover over nodes for details</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Visualization Area -->
+            <div class="col-md-8">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-success text-white d-flex justify-content-between">
+                        <h5 class="mb-0">Tree Visualization</h5>
+                        <div>
+                            <span class="badge bg-light text-dark me-2">
+                                Speed: <span id="speedLabel">Normal</span>
+                            </span>
+                            <input type="range" id="speedControl" min="50" max="2000" value="500" class="form-range">
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="visualization" class="tree-container">
+                            <svg id="arrowCanvas" class="arrow-layer"></svg>
+                            <div id="treeArea" class="tree-area"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const treeArea = document.getElementById('treeArea');
+            const arrowCanvas = document.getElementById('arrowCanvas');
+            const operationSelect = document.getElementById('operation');
+            const nodeValueInput = document.getElementById('nodeValue');
+            const executeBtn = document.getElementById('executeBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const traversalOptions = document.getElementById('traversalOptions');
+            const traversalType = document.getElementById('traversalType');
+            const speedControl = document.getElementById('speedControl');
+            const speedLabel = document.getElementById('speedLabel');
+            const nodeCountEl = document.getElementById('nodeCount');
+            const treeHeightEl = document.getElementById('treeHeight');
+    
+            // Tree variables
+            let root = null;
+            let nodeIdCounter = 0;
+            let animationSpeed = 500;
+            let isAnimating = false;
+    
+            // Arrow marker definition
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrowhead');
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '7');
+            marker.setAttribute('refX', '9');
+            marker.setAttribute('refY', '3.5');
+            marker.setAttribute('orient', 'auto');
+    
+            const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            arrow.setAttribute('points', '0 0, 10 3.5, 0 7');
+            marker.appendChild(arrow);
+            arrowCanvas.appendChild(marker);
+    
+            // Event Listeners
+            operationSelect.addEventListener('change', toggleTraversalOptions);
+            executeBtn.addEventListener('click', executeOperation);
+            clearBtn.addEventListener('click', clearTree);
+            speedControl.addEventListener('input', updateSpeed);
+    
+            // Toggle traversal options visibility
+            function toggleTraversalOptions() {
+                traversalOptions.style.display =
+                    operationSelect.value === 'traversal' ? 'block' : 'none';
+            }
+    
+            // Update animation speed
+            function updateSpeed() {
+                animationSpeed = 2050 - speedControl.value; // Invert the value (50-2000ms)
+    
+                if (speedControl.value < 500) {
+                    speedLabel.textContent = 'Fast';
+                } else if (speedControl.value < 1500) {
+                    speedLabel.textContent = 'Normal';
+                } else {
+                    speedLabel.textContent = 'Slow';
+                }
+            }
+    
+            // Execute the selected operation
+            async function executeOperation() {
+                if (isAnimating) return;
+    
+                const operation = operationSelect.value;
+                const value = parseInt(nodeValueInput.value);
+    
+                if (operation !== 'traversal' && isNaN(value)) {
+                    showStatusMessage('Please enter a valid number');
+                    return;
+                }
+    
+                isAnimating = true;
+    
+                try {
+                    switch (operation) {
+                        case 'insert':
+                            await insertNode(value);
+                            break;
+                        case 'delete':
+                            await deleteNode(value);
+                            break;
+                        case 'search':
+                            await searchNode(value);
+                            break;
+                        case 'traversal':
+                            await performTraversal();
+                            break;
+                    }
+                } finally {
+                    isAnimating = false;
+                    updateTreeInfo();
+                }
+            }
+    
+            // Insert a node into the tree
+            async function insertNode(value) {
+                if (!root) {
+                    root = { value, id: nodeIdCounter++, left: null, right: null };
+                    createNodeElement(root, treeArea.offsetWidth / 2, 50);
+                    showStatusMessage(`Created root node with value ${value}`);
+                    return;
+                }
+    
+                let current = root;
+                let path = [];
+    
+                while (true) {
+                    path.push(current);
+    
+                    if (value === current.value) {
+                        showStatusMessage(`Value ${value} already exists in the tree`);
+                        await highlightNode(current.id, 'highlight');
+                        return;
+                    }
+    
+                    if (value < current.value) {
+                        if (!current.left) {
+                            current.left = { value, id: nodeIdCounter++, left: null, right: null, parent: current };
+                            const parentEl = document.getElementById(`node-${current.id}`);
+                            const x = parseInt(parentEl.style.left) - (100 / (path.length + 1));
+                            const y = parseInt(parentEl.style.top) + 80;
+                            createNodeElement(current.left, x, y);
+                            drawArrow(current, current.left);
+                            showStatusMessage(`Inserted ${value} as left child of ${current.value}`);
+                            await highlightNode(current.left.id, 'highlight');
+                            return;
+                        }
+                        current = current.left;
+                    } else {
+                        if (!current.right) {
+                            current.right = { value, id: nodeIdCounter++, left: null, right: null, parent: current };
+                            const parentEl = document.getElementById(`node-${current.id}`);
+                            const x = parseInt(parentEl.style.left) + (100 / (path.length + 1));
+                            const y = parseInt(parentEl.style.top) + 80;
+                            createNodeElement(current.right, x, y);
+                            drawArrow(current, current.right);
+                            showStatusMessage(`Inserted ${value} as right child of ${current.value}`);
+                            await highlightNode(current.right.id, 'highlight');
+                            return;
+                        }
+                        current = current.right;
+                    }
+    
+                    await highlightNode(current.id, 'traversed');
+                }
+            }
+    
+            // Delete a node from the tree
+            async function deleteNode(value) {
+                let nodeToDelete = null;
+                let current = root;
+                let path = [];
+    
+                // Find the node to delete
+                while (current) {
+                    path.push(current);
+                    await highlightNode(current.id, 'traversed');
+    
+                    if (value === current.value) {
+                        nodeToDelete = current;
+                        break;
+                    }
+    
+                    current = value < current.value ? current.left : current.right;
+                }
+    
+                if (!nodeToDelete) {
+                    showStatusMessage(`Value ${value} not found in the tree`);
+                    return;
+                }
+    
+                await highlightNode(nodeToDelete.id, 'deleted');
+    
+                // Case 1: Node has no children (leaf node)
+                if (!nodeToDelete.left && !nodeToDelete.right) {
+                    if (nodeToDelete === root) {
+                        root = null;
+                    } else {
+                        if (nodeToDelete.parent.left === nodeToDelete) {
+                            nodeToDelete.parent.left = null;
+                        } else {
+                            nodeToDelete.parent.right = null;
+                        }
+                        removeArrow(nodeToDelete.parent.id, nodeToDelete.id);
+                    }
+                    removeNodeElement(nodeToDelete.id);
+                }
+                // Case 2: Node has one child
+                else if (!nodeToDelete.left || !nodeToDelete.right) {
+                    const child = nodeToDelete.left || nodeToDelete.right;
+                    child.parent = nodeToDelete.parent;
+    
+                    if (nodeToDelete === root) {
+                        root = child;
+                    } else {
+                        if (nodeToDelete.parent.left === nodeToDelete) {
+                            nodeToDelete.parent.left = child;
+                        } else {
+                            nodeToDelete.parent.right = child;
+                        }
+                        // Remove old arrow
+                        removeArrow(nodeToDelete.parent.id, nodeToDelete.id);
+                    }
+    
+                    // Get the child element and new position
+                    const childEl = document.getElementById(`node-${child.id}`);
+                    const newX = parseInt(childEl.style.left);
+                    const newY = parseInt(childEl.style.top);
+    
+                    // Get the position of the node being deleted
+                    const deleteEl = document.getElementById(`node-${nodeToDelete.id}`);
+                    const deleteX = parseInt(deleteEl.style.left);
+                    const deleteY = parseInt(deleteEl.style.top);
+    
+                    // Move the child to the deleted node's position
+                    await animateNodeMovement(child.id, deleteX, deleteY);
+                    removeNodeElement(nodeToDelete.id);
+                    
+                    // Redraw all arrows to maintain proper connections
+                    redrawArrows();
+                }
+                // Case 3: Node has two children
+                else {
+                    // Find inorder successor (leftmost node in right subtree)
+                    let successor = nodeToDelete.right;
+                    let successorParent = nodeToDelete;
+                    
+                    while (successor.left) {
+                        successorParent = successor;
+                        await highlightNode(successor.id, 'traversed');
+                        successor = successor.left;
+                    }
+    
+                    // Store original values for status message
+                    const oldValue = nodeToDelete.value;
+                    const successorValue = successor.value;
+    
+                    // Copy successor's value to nodeToDelete
+                    nodeToDelete.value = successor.value;
+    
+                    // Update the displayed value
+                    const nodeEl = document.getElementById(`node-${nodeToDelete.id}`);
+                    nodeEl.textContent = successor.value;
+    
+                    // Delete the successor (which has at most one right child)
+                    if (successorParent !== nodeToDelete) {
+                        successorParent.left = successor.right;
+                        if (successor.right) {
+                            successor.right.parent = successorParent;
+                        }
+                        removeArrow(successorParent.id, successor.id);
+                    } else {
+                        successorParent.right = successor.right;
+                        if (successor.right) {
+                            successor.right.parent = successorParent;
+                        }
+                        removeArrow(successorParent.id, successor.id);
+                    }
+    
+                    // If successor has a right child, we need to move it
+                    if (successor.right) {
+                        const successorRight = successor.right;
+                        const successorEl = document.getElementById(`node-${successor.id}`);
+                        const successorRightEl = document.getElementById(`node-${successorRight.id}`);
+                        
+                        const newX = parseInt(successorEl.style.left);
+                        const newY = parseInt(successorEl.style.top);
+                        
+                        await animateNodeMovement(successorRight.id, newX, newY);
+                    }
+    
+                    // Animate successor deletion
+                    await highlightNode(successor.id, 'deleted');
+                    removeNodeElement(successor.id);
+                    redrawArrows();
+    
+                    showStatusMessage(`Deleted ${oldValue}, replaced with ${successorValue}`);
+                    return;
+                }
+    
+                showStatusMessage(`Deleted node with value ${value}`);
+            }
+    
+            // Search for a node in the tree
+            async function searchNode(value) {
+                let current = root;
+                let found = false;
+    
+                while (current) {
+                    await highlightNode(current.id, 'traversed');
+    
+                    if (value === current.value) {
+                        found = true;
+                        await highlightNode(current.id, 'found');
+                        showStatusMessage(`Found node with value ${value}`);
+                        break;
+                    }
+    
+                    current = value < current.value ? current.left : current.right;
+                }
+    
+                if (!found) {
+                    showStatusMessage(`Value ${value} not found in the tree`);
+                }
+            }
+    
+            // Perform tree traversal
+            async function performTraversal() {
+                const type = traversalType.value;
+                let values = [];
+    
+                switch (type) {
+                    case 'inorder':
+                        await inorderTraversal(root, node => values.push(node.value));
+                        showStatusMessage(`In-order traversal: ${values.join(' → ')}`);
+                        break;
+                    case 'preorder':
+                        await preorderTraversal(root, node => values.push(node.value));
+                        showStatusMessage(`Pre-order traversal: ${values.join(' → ')}`);
+                        break;
+                    case 'postorder':
+                        await postorderTraversal(root, node => values.push(node.value));
+                        showStatusMessage(`Post-order traversal: ${values.join(' → ')}`);
+                        break;
+                    case 'levelorder':
+                        await levelOrderTraversal(root, node => values.push(node.value));
+                        showStatusMessage(`Level-order traversal: ${values.join(' → ')}`);
+                        break;
+                }
+            }
+    
+            // Traversal functions
+            async function inorderTraversal(node, callback) {
+                if (!node) return;
+    
+                await inorderTraversal(node.left, callback);
+                await highlightNode(node.id, 'traversed');
+                callback(node);
+                await delay(animationSpeed);
+                await inorderTraversal(node.right, callback);
+            }
+    
+            async function preorderTraversal(node, callback) {
+                if (!node) return;
+    
+                await highlightNode(node.id, 'traversed');
+                callback(node);
+                await delay(animationSpeed);
+                await preorderTraversal(node.left, callback);
+                await preorderTraversal(node.right, callback);
+            }
+    
+            async function postorderTraversal(node, callback) {
+                if (!node) return;
+    
+                await postorderTraversal(node.left, callback);
+                await postorderTraversal(node.right, callback);
+                await highlightNode(node.id, 'traversed');
+                callback(node);
+                await delay(animationSpeed);
+            }
+    
+            async function levelOrderTraversal(root, callback) {
+                if (!root) return;
+    
+                const queue = [root];
+    
+                while (queue.length > 0) {
+                    const levelSize = queue.length;
+    
+                    for (let i = 0; i < levelSize; i++) {
+                        const node = queue.shift();
+                        await highlightNode(node.id, 'traversed');
+                        callback(node);
+                        await delay(animationSpeed);
+    
+                        if (node.left) queue.push(node.left);
+                        if (node.right) queue.push(node.right);
+                    }
+                }
+            }
+    
+            // Create a node element
+            function createNodeElement(node, x, y) {
+                const nodeEl = document.createElement('div');
+                nodeEl.id = `node-${node.id}`;
+                nodeEl.className = 'node';
+                nodeEl.textContent = node.value;
+                nodeEl.style.left = `${x}px`;
+                nodeEl.style.top = `${y}px`;
+    
+                const infoEl = document.createElement('div');
+                infoEl.className = 'node-info';
+                infoEl.textContent = `ID: ${node.id}`;
+                nodeEl.appendChild(infoEl);
+    
+                nodeEl.addEventListener('mouseenter', () => {
+                    infoEl.textContent = `Value: ${node.value} | ID: ${node.id}`;
+                });
+    
+                treeArea.appendChild(nodeEl);
+            }
+    
+            // Remove a node element
+            function removeNodeElement(nodeId) {
+                const nodeEl = document.getElementById(`node-${nodeId}`);
+                if (nodeEl) {
+                    // Remove all arrows connected to this node first
+                    const arrows = document.querySelectorAll('.path-arrow');
+                    arrows.forEach(arrow => {
+                        if (arrow.id.includes(`-${nodeId}-`) || arrow.id.includes(`${nodeId}-`)) {
+                            arrow.remove();
+                        }
+                    });
+                    nodeEl.remove();
+                }
+            }
+    
+            // Remove a specific arrow between nodes
+            function removeArrow(fromId, toId) {
+                const arrow = document.getElementById(`arrow-${fromId}-${toId}`);
+                if (arrow) {
+                    arrow.remove();
+                }
+            }
+    
+            // Draw an arrow between nodes
+            function drawArrow(fromNode, toNode) {
+                const fromEl = document.getElementById(`node-${fromNode.id}`);
+                const toEl = document.getElementById(`node-${toNode.id}`);
+    
+                if (!fromEl || !toEl) return;
+    
+                const fromRect = fromEl.getBoundingClientRect();
+                const toRect = toEl.getBoundingClientRect();
+                const treeRect = treeArea.getBoundingClientRect();
+    
+                const fromX = fromRect.left + fromRect.width / 2 - treeRect.left;
+                const fromY = fromRect.top + fromRect.height / 2 - treeRect.top;
+                const toX = toRect.left + toRect.width / 2 - treeRect.left;
+                const toY = toRect.top + toRect.height / 2 - treeRect.top;
+    
+                // Calculate control points for a curved arrow
+                const controlX1 = fromX;
+                const controlY1 = fromY + (toY - fromY) * 0.5;
+                const controlX2 = toX;
+                const controlY2 = fromY + (toY - fromY) * 0.5;
+    
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.id = `arrow-${fromNode.id}-${toNode.id}`;
+                path.setAttribute('class', 'path-arrow');
+                path.setAttribute('d', `M${fromX},${fromY} C${controlX1},${controlY1} ${controlX2},${controlY2} ${toX},${toY}`);
+                path.setAttribute('marker-end', 'url(#arrowhead)');
+    
+                arrowCanvas.appendChild(path);
+            }
+    
+            // Redraw all arrows
+            function redrawArrows() {
+                // Clear all arrows except the marker definition
+                document.querySelectorAll('.path-arrow').forEach(arrow => arrow.remove());
+    
+                // Redraw arrows for the entire tree
+                function drawArrowsForNode(node) {
+                    if (!node) return;
+    
+                    if (node.left) {
+                        drawArrow(node, node.left);
+                        drawArrowsForNode(node.left);
+                    }
+    
+                    if (node.right) {
+                        drawArrow(node, node.right);
+                        drawArrowsForNode(node.right);
+                    }
+                }
+    
+                drawArrowsForNode(root);
+            }
+    
+            // Animate node movement
+            async function animateNodeMovement(nodeId, targetX, targetY) {
+                const nodeEl = document.getElementById(`node-${nodeId}`);
+                if (!nodeEl) return;
+    
+                const startX = parseInt(nodeEl.style.left);
+                const startY = parseInt(nodeEl.style.top);
+                
+                const duration = animationSpeed;
+                const startTime = performance.now();
+                
+                return new Promise(resolve => {
+                    function animate(currentTime) {
+                        const elapsedTime = currentTime - startTime;
+                        const progress = Math.min(elapsedTime / duration, 1);
+                        
+                        const newX = startX + (targetX - startX) * progress;
+                        const newY = startY + (targetY - startY) * progress;
+                        
+                        nodeEl.style.left = `${newX}px`;
+                        nodeEl.style.top = `${newY}px`;
+                        
+                        if (progress < 1) {
+                            requestAnimationFrame(animate);
+                        } else {
+                            resolve();
+                        }
+                    }
+                    
+                    requestAnimationFrame(animate);
+                });
+            }
+    
+            // Highlight a node with a specific class
+            async function highlightNode(nodeId, className) {
+                const nodeEl = document.getElementById(`node-${nodeId}`);
+                if (!nodeEl) return;
+    
+                nodeEl.classList.add(className);
+                await delay(animationSpeed / 2);
+                nodeEl.classList.remove(className);
+                await delay(animationSpeed / 2);
+            }
+    
+            // Clear the entire tree
+            function clearTree() {
+                root = null;
+                nodeIdCounter = 0;
+                treeArea.innerHTML = '';
+                arrowCanvas.innerHTML = '';
+                arrowCanvas.appendChild(marker); // Keep the arrowhead marker
+                showStatusMessage('Tree cleared');
+                updateTreeInfo();
+            }
+    
+            // Delay function for animations
+            function delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+    
+            // Show a status message on the screen
+            function showStatusMessage(message) {
+                const statusEl = document.getElementById('status');
+                statusEl.textContent = message;
+            }
+    
+            // Update tree info (node count and height)
+            function updateTreeInfo() {
+                nodeCountEl.textContent = countNodes(root);
+                treeHeightEl.textContent = calculateTreeHeight(root);
+            }
+    
+            // Count the number of nodes in the tree
+            function countNodes(node) {
+                if (!node) return 0;
+                return 1 + countNodes(node.left) + countNodes(node.right);
+            }
+    
+            // Calculate the height of the tree
+            function calculateTreeHeight(node) {
+                if (!node) return 0;
+                const leftHeight = calculateTreeHeight(node.left);
+                const rightHeight = calculateTreeHeight(node.right);
+                return Math.max(leftHeight, rightHeight) + 1;
+            }
+    
+            // Initialize
+            toggleTraversalOptions();
+            updateSpeed();
+        });
+    </script>
+    
+</body>
+</html>

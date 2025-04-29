@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Queue Visualizer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .queue-container {
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      background-color: #fff;
+      padding: 20px;
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      overflow-x: auto;
+      height: 150px;
+      white-space: nowrap;
+    }
+
+    .queue-node {
+      height: 80px;
+      width: 80px;
+      background-color: #4e73df;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      border-radius: 10px;
+      margin: 0 10px;
+      transition: transform 0.3s ease;
+    }
+
+    .queue-node.removed {
+      background-color: #e74a3b;
+      animation: fadeOut 0.5s forwards;
+    }
+
+    .queue-node.peek {
+      background-color: #f6c23e;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .status-message {
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="container-fluid">
+  <h1 class="text-center my-4">Queue Data Structure Visualizer</h1>
+  <div class="row">
+    <!-- Controls -->
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Queue Controls</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label">Operation</label>
+            <select id="operation" class="form-select">
+              <option value="enqueue">Enqueue</option>
+              <option value="dequeue">Dequeue</option>
+              <option value="peek">Peek</option>
+            </select>
+          </div>
+          <div class="mb-3" id="valueInputGroup">
+            <label class="form-label">Value</label>
+            <input type="number" id="queueValue" class="form-control" placeholder="Enter value" />
+          </div>
+          <button id="executeBtn" class="btn btn-primary w-100 mb-3">
+            <i class="fas fa-play me-2"></i>Execute
+          </button>
+          <button id="clearBtn" class="btn btn-outline-danger w-100">
+            <i class="fas fa-trash-alt me-2"></i>Clear Queue
+          </button>
+          <div class="mt-4">
+            <h6>Queue Info</h6>
+            <div class="alert alert-info">
+              <p class="mb-1">Size: <span id="queueSize">0</span></p>
+              <p class="mb-1">Front Value: <span id="queueFront">None</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visualization -->
+    <div class="col-md-8">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-success text-white d-flex justify-content-between">
+          <h5 class="mb-0">Queue Visualization</h5>
+          <div>
+            <span class="badge bg-light text-dark me-2">
+              Speed: <span id="speedLabel">Normal</span>
+            </span>
+            <input type="range" id="speedControl" min="50" max="2000" value="500" class="form-range" />
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="queue-container" id="queueContainer"></div>
+          <div class="status-message text-muted" id="statusMessage"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const operationSelect = document.getElementById("operation");
+  const valueInputGroup = document.getElementById("valueInputGroup");
+  const queueValueInput = document.getElementById("queueValue");
+  const executeBtn = document.getElementById("executeBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const queueContainer = document.getElementById("queueContainer");
+  const queueSizeEl = document.getElementById("queueSize");
+  const queueFrontEl = document.getElementById("queueFront");
+  const speedControl = document.getElementById("speedControl");
+  const speedLabel = document.getElementById("speedLabel");
+  const statusMessage = document.getElementById("statusMessage");
+
+  let queue = [];
+  let animationSpeed = 500;
+
+  operationSelect.addEventListener("change", () => {
+    valueInputGroup.style.display = operationSelect.value === "enqueue" ? "block" : "none";
+  });
+
+  speedControl.addEventListener("input", () => {
+    animationSpeed = 2050 - speedControl.value;
+    speedLabel.textContent = speedControl.value < 500 ? "Fast" : speedControl.value < 1500 ? "Normal" : "Slow";
+  });
+
+  executeBtn.addEventListener("click", async () => {
+    const op = operationSelect.value;
+    if (op === "enqueue") {
+      const value = queueValueInput.value;
+      if (value === "") return showStatus("Enter a value to enqueue.");
+      await enqueueNode(value);
+    } else if (op === "dequeue") {
+      await dequeueNode();
+    } else if (op === "peek") {
+      await peekNode();
+    }
+    updateQueueInfo();
+  });
+
+  clearBtn.addEventListener("click", () => {
+    queue = [];
+    queueContainer.innerHTML = "";
+    updateQueueInfo();
+    showStatus("Queue cleared.");
+  });
+
+  async function enqueueNode(value) {
+    const node = document.createElement("div");
+    node.className = "queue-node";
+    node.textContent = value;
+    queueContainer.appendChild(node);
+    queue.push({ element: node, value });
+    showStatus(`Enqueued ${value}`);
+    await sleep(animationSpeed);
+  }
+
+  async function dequeueNode() {
+    if (queue.length === 0) return showStatus("Queue is empty.");
+    const node = queue.shift();
+    node.element.classList.add("removed");
+    await sleep(animationSpeed);
+    node.element.remove();
+    showStatus(`Dequeued ${node.value}`);
+  }
+
+  async function peekNode() {
+    if (queue.length === 0) return showStatus("Queue is empty.");
+    const node = queue[0];
+    node.element.classList.add("peek");
+    showStatus(`Front value is ${node.value}`);
+    await sleep(animationSpeed);
+    node.element.classList.remove("peek");
+  }
+
+  function updateQueueInfo() {
+    queueSizeEl.textContent = queue.length;
+    queueFrontEl.textContent = queue.length > 0 ? queue[0].value : "None";
+  }
+
+  function showStatus(msg) {
+    statusMessage.textContent = msg;
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+</script>
+</body>
+</html>
