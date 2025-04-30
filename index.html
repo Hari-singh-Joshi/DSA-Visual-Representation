@@ -4,89 +4,72 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Data Structure Visualization</title>
+  <link rel="icon" href="images/favicon.jpg" type="image/png">
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <style>
-    body {
-      background-color: #f8f9fa;
-    }
-    .card-img-top {
-      height: 200px;
-      object-fit: cover;
-    }
-    .card {
-      cursor: pointer;
-      transition: transform 0.3s;
-    }
-    .card:hover {
-      transform: scale(1.05);
-    }
-    .card-title {
-      font-weight: bold;
-      font-size: 1.2rem;
-    }
-    .card-description {
-      font-size: 0.9rem;
-      color: #555;
-    }
-  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/styles.css"/>
 </head>
 <body>
 
-<div class="container my-5">
-  <h1 class="text-center mb-4">Data Structure Visualization</h1>
-  <div class="row row-cols-1 row-cols-md-3 g-4">
-    <!-- Card 1 -->
-    <div class="col">
-      <div class="card shadow-sm" onclick="window.location.href='dfs.html'">
-        <img src="images/graph.png" class="card-img-top" alt="Graph Visualizer" />
-        <div class="card-body">
-          <h5 class="card-title">Graph Visualizer</h5>
-          <p class="card-description">Visualize different graph algorithms and operations with interactive animations.</p>
-        </div>
-      </div>
-    </div>
-    <!-- Card 2 -->
-    <div class="col">
-      <div class="card shadow-sm" onclick="window.location.href='hashtable.html'">
-        <img src="images/hashtable.jpeg" class="card-img-top" alt="Hash Table" />
-        <div class="card-body">
-          <h5 class="card-title">Hash Table</h5>
-          <p class="card-description">Learn about hash tables with visualizations of operations like insert, delete, and search.</p>
-        </div>
-      </div>
-    </div>
-    <!-- Card 3 -->
-    <div class="col">
-      <div class="card shadow-sm" onclick="window.location.href='tree.html'">
-        <img src="images/bst.jpeg" class="card-img-top" alt="Binary Search Tree" />
-        <div class="card-body">
-          <h5 class="card-title">Binary Search Tree</h5>
-          <p class="card-description">Interactive visualizations of binary search tree operations like insertion, deletion, and traversal.</p>
-        </div>
-      </div>
-    </div>
-    <!-- Card 4 -->
-    <div class="col">
-      <div class="card shadow-sm" onclick="window.location.href='stack.html'">
-        <img src="images/stack.jpeg" class="card-img-top" alt="Stack Visualizer" />
-        <div class="card-body">
-          <h5 class="card-title">Stack Visualizer</h5>
-          <p class="card-description">Visualize the stack data structure and operations like push and pop.</p>
-        </div>
-      </div>
-    </div>
-    <!-- Card 5 -->
-    <div class="col">
-      <div class="card shadow-sm" onclick="window.location.href='queue.html'">
-        <img src="images/queue.jpeg" class="card-img-top" alt="Queue Visualizer" />
-        <div class="card-body">
-          <h5 class="card-title">Queue Visualizer</h5>
-          <p class="card-description">Learn about queues with animations showing enqueue and dequeue operations.</p>
-        </div>
-      </div>
-    </div>
 
-    <div class="col">
+<!-- Main Content -->
+<main class="main-content">
+  <div class="container">
+    <h2 class="section-title text-center mb-5">Explore Data Structures</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      <!-- Card 1 -->
+      <div class="col">
+        <div class="card shadow-sm" onclick="window.location.href='dfs.html'">
+          <img src="images/graph.png" class="card-img-top" alt="Graph Visualizer" />
+          <div class="card-body">
+            <h5 class="card-title">Graph Visualizer</h5>
+            <p class="card-description">Visualize different graph algorithms and operations with interactive animations.</p>
+          </div>
+        </div>
+      </div>
+      <!-- Card 2 -->
+      <div class="col">
+        <div class="card shadow-sm" onclick="window.location.href='hashtable.html'">
+          <img src="images/hashtable.jpeg" class="card-img-top" alt="Hash Table" />
+          <div class="card-body">
+            <h5 class="card-title">Hash Table</h5>
+            <p class="card-description">Learn about hash tables with visualizations of operations like insert, delete, and search.</p>
+          </div>
+        </div>
+      </div>
+      <!-- Card 3 -->
+      <div class="col">
+        <div class="card shadow-sm" onclick="window.location.href='tree.html'">
+          <img src="images/bst.jpeg" class="card-img-top" alt="Binary Search Tree" />
+          <div class="card-body">
+            <h5 class="card-title">Binary Search Tree</h5>
+            <p class="card-description">Interactive visualizations of binary search tree operations like insertion, deletion, and traversal.</p>
+          </div>
+        </div>
+      </div>
+      <!-- Card 4 -->
+      <div class="col">
+        <div class="card shadow-sm" onclick="window.location.href='stack.html'">
+          <img src="images/stack.jpeg" class="card-img-top" alt="Stack Visualizer" />
+          <div class="card-body">
+            <h5 class="card-title">Stack Visualizer</h5>
+            <p class="card-description">Visualize the stack data structure and operations like push and pop.</p>
+          </div>
+        </div>
+      </div>
+      <!-- Card 5 -->
+      <div class="col">
+        <div class="card shadow-sm" onclick="window.location.href='queue.html'">
+          <img src="images/queue.jpeg" class="card-img-top" alt="Queue Visualizer" />
+          <div class="card-body">
+            <h5 class="card-title">Queue Visualizer</h5>
+            <p class="card-description">Learn about queues with animations showing enqueue and dequeue operations.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col">
         <div class="card shadow-sm" onclick="window.location.href='array.html'">
           <img src="images/array.jpeg" class="card-img-top" alt="Queue Visualizer" />
           <div class="card-body">
@@ -95,19 +78,33 @@
           </div>
         </div>
       </div>
-    <!-- Card 6 -->
-    <div class="col">
-      <div class="card shadow-sm" onclick="window.location.href='linkedlist.html'">
-        <img src="images/linkedlist.jpeg" class="card-img-top" alt="Linked List" />
-        <div class="card-body">
-          <h5 class="card-title">Linked List Visualizer</h5>
-          <p class="card-description">Interact with linked lists and visualize various operations like insert, delete, and traverse.</p>
+      <!-- Card 6 -->
+      <div class="col">
+        <div class="card shadow-sm" onclick="window.location.href='linkedlist.html'">
+          <img src="images/linkedlist.jpeg" class="card-img-top" alt="Linked List" />
+          <div class="card-body">
+            <h5 class="card-title">Linked List Visualizer</h5>
+            <p class="card-description">Interact with linked lists and visualize various operations like insert, delete, and traverse.</p>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+</main>
+
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Include header
+  fetch('header.html')
+    .then(response => response.text())
+    .then(data => document.body.insertAdjacentHTML('afterbegin', data));
+  
+  // Include footer
+  fetch('footer.html')
+    .then(response => response.text())
+    .then(data => document.body.insertAdjacentHTML('beforeend', data));
+</script>
 </body>
 </html>
